@@ -3,6 +3,6 @@
 
 #include "defines.h"
 
-void Init(strelitzia_t *env);
+void Init(arg_t *args);
 
 #endif // !INIT_H

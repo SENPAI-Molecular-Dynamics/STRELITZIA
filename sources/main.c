@@ -10,11 +10,19 @@
 #include "init.h"
 #include "exit.h"
 
+/* Global stuff (At the end of defines.h) */
+FILE *logfile;
+strelitzia_t *lzenv;
+uint8_t flags = 0;
+
 int main(int argc, char **argv)
 {
-	strelitzia_t *env = malloc(sizeof(strelitzia_t));
-	Init(env);
+	arg_t args;
+	args.argc = argc;
+	args.argv = argv;
 
-	Exit(env);
+	Init(&args);
+
+	Exit(&args);
 	return 0;
 }

@@ -5,7 +5,7 @@ HEADERDIR = headers
 
 PARAMS =
 LIBS = -lm
-CFLAGS = -g -Wextra -I./$(HEADERDIR)
+CFLAGS = -g -O0 -Wextra -I./$(HEADERDIR)
 
 HEADERS = $(wildcard $(HEADERDIR)/*.h)
 SOURCES = $(wildcard $(SOURCEDIR)/*.c)
@@ -29,7 +29,7 @@ run: $(TARGET)
 	./$(TARGET) $(PARAMS)
 
 debug: $(TARGET)
-	gdb -ex="break main" -ex="layout next" -ex="run" --args ./$(TARGET) $(PARAMS)
+	gdb -d $(SOURCEDIR) -d $(HEADERDIR) -ex="break main" -ex="layout src" -ex="run" --args ./$(TARGET) $(PARAMS)
 
 valgrind: $(TARGET)
 	valgrind --leak-check=full ./$(TARGET) $(PARAMS)

@@ -1,6 +1,8 @@
 #include "utils.h"
+#include "exit.h"
 
 #include <stdarg.h>
+#include <time.h>
 
 worker_t *worker_get_by_id(uint32_t id, worker_t *workers, uint32_t num_workers)
 {
@@ -13,87 +15,71 @@ worker_t *worker_get_by_id(uint32_t id, worker_t *workers, uint32_t num_workers)
 }
 
 /* Warning and error messages */
-void throw_err(const int type, const char *format, ...)
+void throw_err(const int err_code, const char *format, ...)
 {
-	FILE *stream;
-
-	/* Which stream to log to, default stderr */
-	#ifdef LOG_FILE
-		if (!LOG_FILE)
-		{
-			fprintf(stderr, "Log file name specified was NULL. Defaulting to stderr\n");
-			stream = stderr;
-		} else {
-			stream = fopen(LOG_FILE, "a");
-		}
-	#endif /* LOG_FILE */
-
-	#ifndef LOG_FILE
-
-	#ifdef LOG_STREAM
-		stream = LOG_STREAM
-	#endif /* LOG_STREAM */
-
-	#ifndef LOG_STREAM
-		stream = stderr;
-	#endif /* !LOG_STREAM */
-
-	#endif /* !LOG_FILE */
-
-	/* Nessecary for variadic functions. Look at $ man 3 stdarg */
-	va_list args;
-	va_start(args, format);
-
-	/* If we couldn't open the log file, we can't log. That's bad. */
-	if (!stream)
+	/* If system is already aborting, don't do this */
+	if (flags & FLAG_ABORTING)
 	{
-		vfprintf(stderr, format, args);
-
-		#ifdef LOG_FILE
-		fprintf(stderr, "\nThe above error occured but we could not open the log file %s.\n Exiting.\n", LOG_FILE);
-		#endif /* LOG_FILE */
-		#ifndef LOG_FILE
-		fprintf(stderr, "\nThe above error occured but we could not open the log file.\n Exiting.\n");
-		#endif /* !LOG_FILE */
-
-		Abort(EXIT_CODE_ERR_CONFIG);
+		return;
 	}
 
-	vfprintf(stream, format, args);
+	/* Nessecary for variadic functions. Look at $ man 3 stdarg */
+	va_list variadic_args;
+	va_start(variadic_args, format);
 
-	/* Also nessecary. See above */
-	va_end(args);
+	/* Get current time */
+	char timestr[1024];
+	time_t t = time(NULL);
+	struct tm *p = localtime(&t);
+	strftime(timestr, 1024, "[%F %H:%M:%S]", p);
 
-	// TODO: Implement
 	/* Now look how bad the error was */
-	switch (type)
+	switch (err_code)
 	{
-		case ERR_TYPE_INFO:
+		case ERR_INFO:
 		{
-			break;			
+			fprintf(logfile, "%s Info: ", timestr);
+			break;
 		}
 
-		case ERR_TYPE_WARN:
+		case ERR_WARN:
 		{
-			break;			
+			fprintf(logfile, "%s Warn: ", timestr);
+			break;
 		}
 
-		case ERR_TYPE_ERR:
+		case ERR_HEAVY_WARN:
 		{
-			break;			
+			fprintf(logfile, "%s Heavy Warning: ", timestr);
+			break;
 		}
 
-		case ERR_TYPE_FATAL:
+		case ERR_UNSPEC | ERR_FATAL:
 		{
-			Abort(EXIT_CODE_ERR_FATAL);
-			break;			
+			fprintf(logfile, "%s ERROR: ", timestr);
+			break;
+		}
+
+		case ERR_INTERN:
+		{
+			fprintf(logfile, "%s Internal ERROR: ", timestr);
+			break;
 		}
 
 		default:
-		{
-			throw_err(ERR_TYPE_INFO, "Unrecognised error type: %d\n", type);
-		}
+			throw_err(ERR_WARN, "Unrecognised error type: %d\n", err_code);
 
+	}
+
+	vfprintf(logfile, format, variadic_args);
+
+	/* Also nessecary. See above */
+	va_end(variadic_args);
+
+	/* For bad errors exit */
+	if (err_code <= 0)
+	{
+		Abort(err_code);
 	}
 }
 

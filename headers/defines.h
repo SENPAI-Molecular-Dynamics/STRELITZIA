@@ -5,7 +5,13 @@
 #include <stdlib.h>
 #include <stdint.h>
 
+#include "codes.h"
 //#include "universe.h"
+
+//#define DEFAULT_CONFIG_FILE "/etc/senpai/strelitzia.conf"
+#define DEFAULT_CONFIG_FILE "./strelitzia.conf"
+//#define DEFAULT_LOG_FILE "/var/log/strelitzia.log"
+#define DEFAULT_LOG_FILE "./strelitzia.log"
 
 /* Everything you might need from a file */
 typedef struct
@@ -14,6 +20,17 @@ typedef struct
 	FILE *fd;
 	uint32_t file_len;
 } file_t;
+
+typedef struct
+{
+	int argc;
+	char **argv;
+	
+	uint8_t flags;
+
+	char *config_file;
+	char *log_file;
+} arg_t;
 
 /* Information about each worker */
 typedef struct
@@ -62,9 +79,11 @@ typedef struct
 	/* Various files */
 	file_t render_out;
 	file_t mds_in, mdm_in, mdp_in;
+	file_t config;
 
 	/* Keep track of this */
 	uint32_t frame_num;
+	uint32_t error_count;
 	error_t *errs;
 	uint32_t worker_count;
 	worker_t *workers;
@@ -72,5 +91,10 @@ typedef struct
 	/* The reason we're doing this */
 	//universe_t *universe;
 } strelitzia_t;
+
+/* Global stuff */
+extern uint8_t flags;
+extern FILE *logfile;
+extern strelitzia_t *lzenv;
 
 #endif // !DEFINES_H
