@@ -5,11 +5,16 @@
  *
  */
 
-#include <stdio.h>
+#include "defines.h"
+
+#include "init.h"
+#include "exit.h"
 
 int main(int argc, char **argv)
 {
-	printf("Hello world\n");
+	strelitzia_t *env = malloc(sizeof(strelitzia_t));
+	Init(env);
 
+	Exit(env);
 	return 0;
 }
