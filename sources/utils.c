@@ -1,5 +1,6 @@
 #include "utils.h"
 #include "exit.h"
+#include "text.h"
 
 #include <stdarg.h>
 #include <time.h>
@@ -25,9 +26,9 @@ void worker_create()
 	{
 		if (errno == ENOMEM)
 		{
-			throw_err(ERR_INTERN, "Ran out of memory\n");
+			throw_err(ERR_INTERN, TEXT_ERROR_MALLOC_OUTOFMEM);
 		} else {
-			throw_err(ERR_INTERN, "Unknown error at memory allocation [%s:%d]", __FILE__, __LINE__);
+			throw_err(ERR_INTERN, TEXT_ERROR_MALLOC_FAILED, __FILE__, __LINE__);
 		}
 	}
 
@@ -60,36 +61,36 @@ void throw_err(const int err_code, const char *format, ...)
 	{
 		case ERR_INFO:
 		{
-			fprintf(conf.logfile.fd, "%s Info: ", timestr);
+			fprintf(conf.logfile.fd, "%s %s", timestr, TEXT_INFO);
 			break;
 		}
 
 		case ERR_WARN:
 		{
-			fprintf(conf.logfile.fd, "%s Warn: ", timestr);
+			fprintf(conf.logfile.fd, "%s %s", timestr, TEXT_WARNING);
 			break;
 		}
 
 		case ERR_HEAVY_WARN:
 		{
-			fprintf(conf.logfile.fd, "%s Heavy Warning: ", timestr);
+			fprintf(conf.logfile.fd, "%s %s", timestr, TEXT_HEAVWARN);
 			break;
 		}
 
 		case ERR_UNSPEC | ERR_FATAL:
 		{
-			fprintf(conf.logfile.fd, "%s ERROR: ", timestr);
+			fprintf(conf.logfile.fd, "%s %s", timestr, TEXT_ERROR);
 			break;
 		}
 
 		case ERR_INTERN:
 		{
-			fprintf(conf.logfile.fd, "%s Internal ERROR: ", timestr);
+			fprintf(conf.logfile.fd, "%s %s", timestr, TEXT_INTERROR);
 			break;
 		}
 
 		default:
-			throw_err(ERR_WARN, "Unrecognised error type: %d\n", err_code);
+			throw_err(ERR_WARN, TEXT_PANIC, err_code);
 
 	}
 
@@ -108,6 +109,6 @@ void throw_err(const int err_code, const char *format, ...)
 void print_usage()
 {
 	// USAGE_STRING defined in codes.h
-	printf("Usage: strelitzia\n%s", USAGE_STRING);
+	printf(TEXT_USAGE);
 }
 

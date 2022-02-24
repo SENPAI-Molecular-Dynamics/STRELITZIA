@@ -1,6 +1,7 @@
 #include "init.h"
 #include "exit.h"
 #include "utils.h"
+#include "text.h"
 
 #include <string.h>
 
@@ -13,7 +14,7 @@ void Init (int argc, char **argv)
 	/* Temporarily use stderr as log file until the real one has been determined */
 	conf.logfile.fd = stderr;
 
-	throw_err(ERR_INFO, "Initializing\n");
+	throw_err(ERR_INFO, TEXT_INITIALIZING);
 
 	/* Initialize config values */
 	conf.conf_file.path = NULL;
@@ -40,11 +41,11 @@ void Init (int argc, char **argv)
 
 	if (!conf.logfile.fd)
 	{
-		fprintf(stderr, "Failed to open log file %s\n", DEFAULT_LOG_FILE);
+		fprintf(stderr, TEXT_ERROR_FILE_LOG_OPEN, DEFAULT_LOG_FILE);
 		Abort(ERR_INTERN);
 	}
 
-	throw_err(ERR_INFO, "Done initializing\n");
+	throw_err(ERR_INFO, TEXT_INITIALIZING_DONE);
 }
 
 void parse_line(char *line, int lineno)
@@ -160,7 +161,7 @@ void parse_line(char *line, int lineno)
 		default:
 		{
 			/* This should not even occur */
-			throw_err(ERR_INTERN, "In config file %s line %d error parsing line\n%s\n%s\n",
+			throw_err(ERR_INTERN, TEXT_ERROR_FILE_CONF_PARSE,
 				conf.conf_file.path, lineno, line, bak_words);
 		}
 	}
@@ -176,23 +177,23 @@ void parse_config()
 	/* Try to open the config file */
 	if (!conf.conf_file.path)
 	{
-		throw_err(ERR_INTERN, "Config file path was NULL\n");
+		throw_err(ERR_INTERN, TEXT_ERROR_FILE_CONF_PATH);
 	}
 
-	throw_err(ERR_INFO, "Parsing config file %s\n", conf.conf_file.path);
+	throw_err(ERR_INFO, TEXT_FILE_CONF_PARSING, conf.conf_file.path);
 
 	conf.conf_file.fd = fopen(conf.conf_file.path, "r");
 	
 	if (!conf.conf_file.fd)
 	{
-		throw_err(ERR_WARN, "Failed to open config file %s. Trying default at %s\n", conf.conf_file.path, DEFAULT_CONFIG_FILE);
+		throw_err(ERR_WARN, TEXT_ERROR_FILE_CONF_OPEN, conf.conf_file.path, DEFAULT_CONFIG_FILE);
 
 		conf.conf_file.path = DEFAULT_CONFIG_FILE;
 		conf.conf_file.fd = fopen(conf.conf_file.path, "r");
 		
 		if (!conf.conf_file.fd)
 		{
-			throw_err(ERR_INTERN, "Also failed to open default config file. Check if %s exists\n", conf.conf_file.path);
+			throw_err(ERR_INTERN, TEXT_ERROR_FILE_CONF_OPENDEF, conf.conf_file.path);
 		}
 	}	
 
@@ -206,7 +207,7 @@ void parse_config()
 
 	if (conf.conf_file.len < 1)
 	{
-		throw_err(ERR_INTERN, "Config file %s is empty\n", conf.conf_file.path);
+		throw_err(ERR_INTERN, TEXT_ERROR_FILE_CONF_EMPTY, conf.conf_file.path);
 	}
 
 	/* File is read line-by-line */
@@ -229,7 +230,7 @@ void parse_config()
 				if (i >= CONF_READ_BUF_SIZE - 1)
 				{
 					cur_line[CONF_READ_BUF_SIZE - 1] = 0x00;
-					throw_err(ERR_INTERN, "Line in config file is too long:\n%s\n", cur_line);
+					throw_err(ERR_INTERN, TEXT_ERROR_FILE_CONF_LONGLINE, cur_line);
 				}
 			} else {
 				cur_line[i - 1] = 0x00;		// Null-terminate the string
@@ -237,7 +238,7 @@ void parse_config()
 				/* It wasn't EOF, so there's an error */
 				if (feof(conf.conf_file.fd) == 0)
 				{
-					throw_err(ERR_INTERN, "Unexpected error reading from %s. Last line:\n %s\n",
+					throw_err(ERR_INTERN, TEXT_ERROR_FILE_CONF_READING,
 							conf.conf_file.path, cur_line);
 				}
 
@@ -273,7 +274,7 @@ int parse_single_char_arg(char arg, char **argv, int remaining_args)
 			{
 				return arg_found_conf(argv[1]);
 			} else {
-				throw_err(ERR_INTERN, "Expected parameter for arg %c\n", arg);
+				throw_err(ERR_INTERN, TEXT_ERROR_ARG_EXPECTED_PARAM, arg);
 			}
 		}
 
@@ -283,7 +284,7 @@ int parse_single_char_arg(char arg, char **argv, int remaining_args)
 			{
 				return arg_found_log(argv[1]);
 			} else {
-				throw_err(ERR_INTERN, "Expected parameter for arg %c\n", arg);
+				throw_err(ERR_INTERN, TEXT_ERROR_ARG_EXPECTED_PARAM, arg);
 			}
 		}
 
@@ -294,7 +295,7 @@ int parse_single_char_arg(char arg, char **argv, int remaining_args)
 		
 		default:
 		{
-			throw_err(ERR_INTERN, "Inrecognised argument %c\n", arg);
+			throw_err(ERR_INTERN, TEXT_ERROR_ARG_UNKNOWN, arg);
 		}
 	}
 }
@@ -308,7 +309,7 @@ int parse_multi_char_arg(char **argv, int remaining_args)
 	// Both first chars need to be --
 	if (!(argv[0][0] == '-' && argv[0][1] == '-'))
 	{
-		throw_err(ERR_INTERN, "Argument %s does not start with '--'\n", argv[0]);
+		throw_err(ERR_INTERN, TEXT_ERROR_ARG_NODOUBLEDASH, argv[0]);
 	}
 
 	if (strcmp(argv[0], ARG_LONG_CONF_FILE) == 0) {
@@ -316,29 +317,29 @@ int parse_multi_char_arg(char **argv, int remaining_args)
 		{
 			return arg_found_conf(argv[1]);
 		} else {
-			throw_err(ERR_INTERN, "Expected parameter for arg %s\n", argv[0]);
+			throw_err(ERR_INTERN, TEXT_ERROR_ARG_EXPECTED_PARAM, argv[0]);
 		}
 	} else if (strcmp(argv[0], ARG_LONG_LOG_FILE) == 0) {
 		if (remaining_args > 0)
 		{
 			return arg_found_log(argv[1]);
 		} else {
-			throw_err(ERR_INTERN, "Expected parameter for arg %s\n", argv[0]);
+			throw_err(ERR_INTERN, TEXT_ERROR_ARG_EXPECTED_PARAM, argv[0]);
 		}
 	} else if (strcmp(argv[0], ARG_LONG_HELP) == 0) {
 		return arg_found_help();
 	} else {
-		throw_err(ERR_INTERN, "Unrecognised argument: %s\n", argv[0]);
+		throw_err(ERR_INTERN, TEXT_ERROR_ARG_UNKNOWN, argv[0]);
 	}
 }
 
 void parse_args(int argc, char **argv)
 {
-	throw_err(ERR_INFO, "Parsing arguments\n");
+	throw_err(ERR_INFO, TEXT_ARG_PARSING);
 
 	if (!argv)
 	{
-		throw_err(ERR_INTERN, "argv was NULL\n");
+		throw_err(ERR_INTERN, TEXT_ERROR_ARG_ARGV_NULL);
 	}
 
 	// This can absolutely be done better, just a placeholder
@@ -347,7 +348,7 @@ void parse_args(int argc, char **argv)
 		// Single char arg
 		if (argv[i][1] == 0x00)
 		{
-			throw_err(ERR_INFO, "Single char arg caught: %s\n", argv[i]);
+			throw_err(ERR_INFO, TEXT_ERROR_ARG_SINGLECHAR, argv[i]);
 			i += parse_single_char_arg(argv[i][0], &argv[i], argc - i - 1);
 		} else {
 			// Have a - in front of everty other argument
@@ -355,14 +356,14 @@ void parse_args(int argc, char **argv)
 			{
 				if (argv[i][2] == 0x00)
 				{
-					throw_err(ERR_INFO, "Single char arg caught: %s\n", argv[i]);
+					throw_err(ERR_INFO, TEXT_ERROR_ARG_SINGLECHAR, argv[i]);
 					i += parse_single_char_arg(argv[i][1], &argv[i], argc - i - 1);
 				} else {
-					throw_err(ERR_INFO, "Multi char arg caught: %s\n", argv[i]);
+					throw_err(ERR_INFO, TEXT_ERROR_ARG_MULTICHAR, argv[i]);
 					i += parse_multi_char_arg(&argv[i], argc - i - 1);
 				}
 			} else {
-				throw_err(ERR_INTERN, "Argument not recognised: %s. Also check %s\n", argv[i], argv[i - 1]);
+				throw_err(ERR_INTERN, TEXT_ERROR_ARG_UNKNOWN2, argv[i], argv[i - 1]);
 			}
 		}
 	}

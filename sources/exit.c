@@ -1,14 +1,15 @@
 #include "exit.h"
 #include "utils.h"
+#include "text.h"
 
 /* Standard exit procedure */
 void Exit()
 {
-	throw_err(ERR_INFO, "Exiting\n");
+	throw_err(ERR_INFO, TEXT_ERROR_EXITING);
 
 	/* Also close the workers */
 
-	throw_err(ERR_INFO, "Done exiting\n");
+	throw_err(ERR_INFO, TEXT_ERROR_EXITING_DONE);
 
 	/* Don't accidentally close stderr */
 	if (conf.logfile.fd != stderr && conf.logfile.fd != stdout)
