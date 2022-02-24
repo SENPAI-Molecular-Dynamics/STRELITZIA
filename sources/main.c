@@ -5,6 +5,8 @@
  *
  */
 
+#include <stdio.h>
+
 #include "defines.h"
 
 #include "init.h"
@@ -18,6 +20,7 @@ config_t conf;
 int main(int argc, char **argv)
 {
 	Init(argc, argv);
+        printf(TEXT_SPLASH);
 
 	// DEBUG
 	#include "utils.h"
