@@ -3,6 +3,11 @@
 
 #include "defines.h"
 
-void Init(arg_t *args);
+/* Functions called when the respective argument was passed */
+static int arg_found_help();
+static int arg_found_conf(char *filename);
+static int arg_found_log(char *filename);
+
+void Init(int argc, char **argv);
 
 #endif // !INIT_H

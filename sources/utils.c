@@ -4,21 +4,43 @@
 #include <stdarg.h>
 #include <time.h>
 
-worker_t *worker_get_by_id(uint32_t id, worker_t *workers, uint32_t num_workers)
+worker_t *worker_get_by_id(uint32_t id)
 {
-	if (id > num_workers + 1)
+	if (id > env.worker_count)
 	{
 		return NULL;
 	}
 
-	return &workers[id - 1];
+	// strelitzia has id 0, workers increasing from there
+	return &env.workers[id - 1];
+}
+
+void worker_create()
+{
+	env.worker_count++;
+	worker_t *tmp = (worker_t *) reallocarray((void *) env.workers, env.worker_count, sizeof(worker_t));
+	
+	/* If we could not create a new worker */
+	if (!tmp)
+	{
+		if (errno == ENOMEM)
+		{
+			throw_err(ERR_INTERN, "Ran out of memory\n");
+		} else {
+			throw_err(ERR_INTERN, "Unknown error at memory allocation [%s:%d]", __FILE__, __LINE__);
+		}
+	}
+
+	env.workers = tmp;
+	env.workers[env.worker_count - 1].id = env.worker_count;
+	env.workers[env.worker_count - 1].flags = WFLAG_UNFINISHED;
 }
 
 /* Warning and error messages */
 void throw_err(const int err_code, const char *format, ...)
 {
 	/* If system is already aborting, don't do this */
-	if (flags & FLAG_ABORTING)
+	if (conf.flags & FLAG_ABORTING)
 	{
 		return;
 	}
@@ -38,31 +60,31 @@ void throw_err(const int err_code, const char *format, ...)
 	{
 		case ERR_INFO:
 		{
-			fprintf(logfile, "%s Info: ", timestr);
+			fprintf(conf.logfile.fd, "%s Info: ", timestr);
 			break;
 		}
 
 		case ERR_WARN:
 		{
-			fprintf(logfile, "%s Warn: ", timestr);
+			fprintf(conf.logfile.fd, "%s Warn: ", timestr);
 			break;
 		}
 
 		case ERR_HEAVY_WARN:
 		{
-			fprintf(logfile, "%s Heavy Warning: ", timestr);
+			fprintf(conf.logfile.fd, "%s Heavy Warning: ", timestr);
 			break;
 		}
 
 		case ERR_UNSPEC | ERR_FATAL:
 		{
-			fprintf(logfile, "%s ERROR: ", timestr);
+			fprintf(conf.logfile.fd, "%s ERROR: ", timestr);
 			break;
 		}
 
 		case ERR_INTERN:
 		{
-			fprintf(logfile, "%s Internal ERROR: ", timestr);
+			fprintf(conf.logfile.fd, "%s Internal ERROR: ", timestr);
 			break;
 		}
 
@@ -71,7 +93,7 @@ void throw_err(const int err_code, const char *format, ...)
 
 	}
 
-	vfprintf(logfile, format, variadic_args);
+	vfprintf(conf.logfile.fd, format, variadic_args);
 
 	/* Also nessecary. See above */
 	va_end(variadic_args);
@@ -81,5 +103,11 @@ void throw_err(const int err_code, const char *format, ...)
 	{
 		Abort(err_code);
 	}
+}
+
+void print_usage()
+{
+	// USAGE_STRING defined in codes.h
+	printf("Usage: strelitzia\n%s", USAGE_STRING);
 }
 

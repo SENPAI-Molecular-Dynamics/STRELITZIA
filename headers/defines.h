@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <errno.h>
 
 #include "codes.h"
 //#include "universe.h"
@@ -12,35 +13,35 @@
 #define DEFAULT_CONFIG_FILE "./strelitzia.conf"
 //#define DEFAULT_LOG_FILE "/var/log/strelitzia.log"
 #define DEFAULT_LOG_FILE "./strelitzia.log"
+#define CONF_READ_BUF_SIZE 1024		// Max line length of config file
 
 /* Everything you might need from a file */
 typedef struct
 {
 	char *path;
 	FILE *fd;
-	uint32_t file_len;
+	uint32_t len;
 } file_t;
 
 typedef struct
 {
-	int argc;
-	char **argv;
-	
 	uint8_t flags;
-
-	char *config_file;
-	char *log_file;
-} arg_t;
+	file_t conf_file;
+	file_t logfile;
+} config_t;
 
 /* Information about each worker */
 typedef struct
 {
 	/* Reference */
 	uint32_t id;
+	/* Keep track of the state of a worker */
+	uint8_t flags;
 
 	/* Networking */
 	// TODO: This is just a placeholder
-	uint32_t ip;
+	uint32_t ipv4;
+	uint64_t ipv6[3];
 	uint16_t port;
 
 	/* Timing */
@@ -53,7 +54,7 @@ typedef struct
 	char *result;
 
 	/* If the worker encounters an error */
-	uint32_t errno;
+	uint32_t errnum;
 	char *errdesc;
 } worker_t;
 
@@ -66,7 +67,7 @@ typedef struct
 	worker_t *culprit;
 	
 	/* What happened? */
-	uint32_t errno;
+	uint32_t errnum;
 	char *desc;
 } error_t;
 
@@ -79,7 +80,6 @@ typedef struct
 	/* Various files */
 	file_t render_out;
 	file_t mds_in, mdm_in, mdp_in;
-	file_t config;
 
 	/* Keep track of this */
 	uint32_t frame_num;
@@ -93,8 +93,7 @@ typedef struct
 } strelitzia_t;
 
 /* Global stuff */
-extern uint8_t flags;
-extern FILE *logfile;
-extern strelitzia_t *lzenv;
+extern strelitzia_t env;
+extern config_t conf;
 
 #endif // !DEFINES_H

@@ -5,25 +5,30 @@ HEADERDIR = headers
 
 PARAMS =
 LIBS = -lm
-CFLAGS = -g -O0 -Wextra -I./$(HEADERDIR)
+WARNS = -Wextra -Wimplicit-fallthrough=0
+CFLAGS = -g -O0 -I./$(HEADERDIR) $(WARNS)
 
 HEADERS = $(wildcard $(HEADERDIR)/*.h)
 SOURCES = $(wildcard $(SOURCEDIR)/*.c)
 OBJECTS = $(patsubst %.c, %.o, $(SOURCES))
 
-.PHONY: all run clean debug valgrind
+.PHONY: all run clean rebuild debug valgrind
 
 all: $(TARGET)
 
 %.o: %.c $(HEADERS)
-	gcc $(CFLAGS) -c $< -o $@
+	@gcc $(CFLAGS) -c $< -o $@
+	@echo compiling $@ from $<
 
 $(TARGET): $(OBJECTS)
-	gcc $(OBJECTS) $(CFLAGS) $(LIBS) -o $@
+	@gcc $(OBJECTS) $(CFLAGS) $(LIBS) -o $@
+	@echo linking $@
 
 clean:
 	-rm -f $(SOURCEDIR)/*.o
 	-rm -f $(TARGET)
+
+rebuild: clean $(TARGET)
 
 run: $(TARGET)
 	./$(TARGET) $(PARAMS)
