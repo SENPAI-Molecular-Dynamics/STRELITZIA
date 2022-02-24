@@ -6,6 +6,7 @@
  */
 
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "defines.h"
 
@@ -38,5 +39,5 @@ int main(int argc, char **argv)
 	}
 
 	Exit();
-	return 0;
+	return (EXIT_SUCCESS);
 }
