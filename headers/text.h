@@ -16,21 +16,20 @@
 #define COLOR_YELLOW "\x1B[33m"
 
 /* Error prefixes */
-#define TEXT_BANG     "[" COLOR_RED "!" COLOR_RESET "] "
-#define TEXT_INFO     TEXT_BANG COLOR_YELLOW "INFORMATION   " COLOR_RESET ": "
-#define TEXT_WARNING  TEXT_BANG COLOR_YELLOW "WARNING       " COLOR_RESET ": "
-#define TEXT_HEAVWARN TEXT_BANG COLOR_RED    "HEAVY WARNING " COLOR_RESET ": "
-#define TEXT_ERROR    TEXT_BANG COLOR_RED    "ERROR         " COLOR_RESET ": "
-#define TEXT_INTERROR TEXT_BANG COLOR_RED    "INTERNAL ERROR" COLOR_RESET ": "
-#define TEXT_PANIC    TEXT_BANG COLOR_RED    "!!! PANIC !!! " COLOR_RESET ": Unknown error code !\n"
-#define TEXT_SUCCESS  TEXT_BANG COLOR_GREEN  "OK            " COLOR_RESET ": "
+#define TEXT_INFO                  "INFORMATION"    COLOR_RESET ": "
+#define TEXT_WARNING  COLOR_YELLOW "WARNING"        COLOR_RESET ": "
+#define TEXT_HEAVWARN COLOR_RED    "HEAVY WARNING"  COLOR_RESET ": "
+#define TEXT_ERROR    COLOR_RED    "ERROR"          COLOR_RESET ": "
+#define TEXT_INTERROR COLOR_RED    "INTERNAL ERROR" COLOR_RESET ": "
+#define TEXT_PANIC    COLOR_RED    "!!! PANIC !!!"  COLOR_RESET ": Unknown error code !\n"
+#define TEXT_SUCCESS  COLOR_GREEN  "OK"             COLOR_RESET ": "
 
 /* Error messages */
 #define TEXT_ERROR_EXITING            "Exiting\n"
 #define TEXT_ERROR_EXITING_DONE       "Exiting DONE\n"
 
-#define TEXT_ERROR_MALLOC_OUTOFMEM    "Ran out of memory\n"
-#define TEXT_ERROR_MALLOC_FAILED      "Unknown error at memory allocation [%s:%d]\n"
+#define TEXT_ERROR_MALLOC_OUTOFMEM    "malloc: Ran out of memory\n"
+#define TEXT_ERROR_MALLOC_FAILED      "malloc: Unknown error [%s:%d]\n"
 
 #define TEXT_ERROR_FILE_LOG_OPEN      "Failed to open log file %s\n"
 
@@ -62,8 +61,11 @@
                     "<< STRELITZIA and its source code are licensed under the terms of the GPLv3 license >>\n" \
                     "<< https://senpaimd.org | https://github.com/SENPAI-Molecular-Dynamics/STRELITZIA >> \n"
 
-/* The usage tooltip */
-#define TEXT_USAGE "Usage: strelitzia" //Combine with USAGE_STRING in codes.h
+/* The usage tooltip (see utils.c print_usage() */
+#define TEXT_USAGE "Usage: strelitzia" \
+                   "c / -c / --config [file]  Specify config file\n" \
+                   "l / -l / --log    [file]  Specify log file\n" \
+                   "h / -h / --help           Show this usage\n" \
 
 
 
