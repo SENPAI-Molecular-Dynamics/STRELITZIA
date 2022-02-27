@@ -62,12 +62,6 @@
 #define ARG_SHORT_LOG_FILE 'l'
 #define ARG_SHORT_HELP 'h'
 
-/* Usage text (see utils.c print_usage()) */
-#define USAGE_STRING "\
-c / -c / --config	[file]	specify config file\n\
-l / -l / --log		[file]	specify log file\n\
-h / -h / --help			show this usage\n"
-
 /* Names and reference ids of the config file parameters */
 #define CONF_LOG_ID 1
 #define CONF_LOG_PARAM "logfile"
