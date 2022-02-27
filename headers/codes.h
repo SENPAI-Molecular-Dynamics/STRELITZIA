@@ -8,16 +8,17 @@
 #define COF_EX_FAIL 501
 
 /* Exit codes from workers */
-#define WOR_EX_SUCC 0
-#define WOR_EX_FAIL 1
+#define WORKER_EXIT_SUCCESS 0
+#define WORKER_EXIT_FAILURE 1
 
 /* Error codes */
-#define ERR_INTERN -2		// For when it's the interns fault /j (strelitzia internal errors)
-#define ERR_FATAL -1		// General fatal error
-#define ERR_UNSPEC 0		// Unspecified error, fatal
-#define ERR_HEAVY_WARN 1	// Something is bad, but not enough to be fatal
-#define ERR_WARN 2		// A warning. Wow.
-#define ERR_INFO 3		// Simply information
+#define ERR_CONFIG	-3	// Config file error
+#define ERR_INTERN	-2	// For when it's the interns fault /j (strelitzia internal errors)
+#define ERR_FATAL	-1	// General fatal error
+#define ERR_UNSPEC	 0	// Unspecified error, fatal
+#define ERR_HEAVY_WARN	 1	// Something is bad, but not enough to be fatal
+#define ERR_WARN	 2	// A warning. Wow.
+#define ERR_INFO	 3	// Simply information
 
 /* Global flags */
 #define FLAG_ABORTING 0x01	// When the system is aborting don't log errors, simply skip
@@ -29,16 +30,28 @@
 #define FLAG_PLACEHOLDER6 0x40
 #define FLAG_PLACEHOLDER7 0x80
 
-/* Worker state flags */
-#define WFLAG_UNFINISHED 0x01	// Worker is not fully functioning yet
-#define WFLAG_READY	 0x02	// Worker is ready to receive work
-#define WFLAG_WORKING	 0x04	// Worker is currently working
-#define WFLAG_TIMEOUT	 0x08	// Worker has timed out
-#define WFLAG_CRASH	 0x10	// We have received confirmation of the worker crashing
-#define WFLAG_PLACEHOLDER5 0x20
-#define WFLAG_PLACEHOLDER6 0x40
-#define WFLAG_PLACEHOLDER7 0x80
+/* Worker state flags as set by worker */
+#define WFLAG_ALIVE	0x01	// Worker is alive
+#define WFLAG_HALTING	0x02	// Worker is not ready
+#define WFLAG_WAITING	0x04	// Worker is ready to receive work
+#define WFLAG_WORKING	0x08	// Worker is currently working
 
+#define WFLAG_TIMEOUT	0x20	// Worker has timed out (self report)
+#define WFLAG_CONNECTED 0x40	// Connection to worker node established
+
+#define WFLAG_INTERRUPT 0x80	// Worker has important information for the manager
+
+/* Worker state flags as set by manager */
+#define MFLAG_HALT	0x01	// Halt all processing
+#define MFLAG_DISCONN	0x02	// Disconnect from worker node
+#define MFLAG_EXIT	0x04	// Exit
+
+#define MFLAG_TIMEOUT	0x10	// For keeping track of timed out workers
+
+#define MFLAG_IS_IP6	0x80	// 0 => IPv4, 1 => IPv6
+
+/* Worker error numbers */
+#define WERRNO_CONN_FAIL	1	// Failed to connect to worker
 
 /* Parameters */
 #define ARG_LONG_CONF_FILE "--conf"
@@ -59,10 +72,7 @@ h / -h / --help			show this usage\n"
 #define CONF_LOG_ID 1
 #define CONF_LOG_PARAM "logfile"
 
-#define CONF_WORKER_IP4_ID 2
-#define CONF_WORKER_IP4_PARAM "worker_ipv4"
-
-#define CONF_WORKER_IP6_ID 3
-#define CONF_WORKER_IP6_PARAM "worker_ipv6"
+#define CONF_WORKER_ID 2
+#define CONF_WORKER_PARAM "worker"
 
 #endif // !CODES_H

@@ -2,10 +2,10 @@
 #include "exit.h"
 #include "utils.h"
 #include "text.h"
+#include "conf_conf.h"
 
 #include <string.h>
 
-// TODO: Improve this
 void parse_args(int argc, char **argv);
 void parse_config();
 
@@ -14,12 +14,15 @@ void Init (int argc, char **argv)
 	/* Temporarily use stderr as log file until the real one has been determined */
 	conf.logfile.fd = stderr;
 
-	throw_err(ERR_INFO, TEXT_INITIALIZING);
+	// throw_err(ERR_INFO, TEXT_INITIALIZING);
 
 	/* Initialize config values */
 	conf.conf_file.path = NULL;
 	conf.logfile.path = (char *) malloc(CONF_READ_BUF_SIZE);
 	conf.flags = 0;
+
+	/* Initialize enviroment values */
+	env.worker_count = 0;
 
 	parse_args(argc, argv);
 
@@ -31,7 +34,6 @@ void Init (int argc, char **argv)
 
 	parse_config();
 
-
 	/* Now try to open the real log file */
 	if (!conf.logfile.path)
 	{
@@ -42,17 +44,21 @@ void Init (int argc, char **argv)
 	if (!conf.logfile.fd)
 	{
 		fprintf(stderr, TEXT_ERROR_FILE_LOG_OPEN, DEFAULT_LOG_FILE);
-		Abort(ERR_INTERN);
+		Abort(ERR_CONFIG);
 	}
 
-	throw_err(ERR_INFO, TEXT_INITIALIZING_DONE);
+	/* Now actually start the worker threads */
+	workers_start();
+
+	// throw_err(ERR_INFO, TEXT_INITIALIZING_DONE);
 }
 
 void parse_line(char *line, int lineno)
 {
 	/* i is for source string, j for destination */
 	int i = 0, j = 0;
-	char words[CONF_READ_BUF_SIZE];
+	/* Max line length + two delimiting NULL bytes */
+	char words[CONF_READ_BUF_SIZE + 2];
 	char c = line[0], b = 1;
 
 	/* If we've reached a comment we might as well leave */
@@ -69,8 +75,8 @@ void parse_line(char *line, int lineno)
 			/* If the last char was already a seperator we don't need another one */
 			if (b)
 			{
-				words[j] = ' ';	// Put seperator in the list
-				b = 0;		// Last char was seperator
+				words[j] = 0x00;	// NULL-seperate the list
+				b = 0;			// Last char was seperator
 				j++;
 			}
 		}
@@ -78,97 +84,132 @@ void parse_line(char *line, int lineno)
 		i++;
 		c = line[i];
 	}
-	words[j] = 0x00;	// Null-terminate the string
 
-	/* Back up values for logging */
-	char bak_param[CONF_READ_BUF_SIZE];
-	char bak_words[CONF_READ_BUF_SIZE];
-	strcpy(bak_words, words);
+	/* Double NULL-terminate the string */
+	words[j] = 0x00;
+	words[j + 1] = 0x00;
 
-	int type = 0;			// Wich confige param is being set this line
-	const char *delim = " ";	// The delimiter, we're using ' ' here;
+	/* Which config param is being set this line */
+	int type = 0;
+	/* The next word */
+	char *word = words;
 	
-	/* Get the first token */
-	char *token = strtok(words, delim);
-
 	/* The line did not contain any information (empty line, comment) */
-	if (!token)
+	if (!words[0])
 	{
 		return;
 	}
 
-	/* Backup */
-	strcpy(bak_param, token);
-
-	if (strcmp(token, CONF_LOG_PARAM) == 0) {
-		type = CONF_LOG_ID;
-	} else if (strcmp(token, CONF_WORKER_IP4_PARAM) == 0) {
-		type = CONF_WORKER_IP4_ID;
-	} else if (strcmp(token, CONF_WORKER_IP6_PARAM) == 0) {
-		type = CONF_WORKER_IP6_ID;
+	if (strcmp(words, CONF_LOGFILE_PARAM) == 0) {
+		type = CONF_LOGFILE_ID;
+	} else if (strcmp(words, CONF_WORKER_PARAM) == 0) {
+		type = CONF_WORKER_ID;
 	} else {
-		throw_err(ERR_INTERN, "In config file %s line %d parameter not recognised: %s\n",
-			conf.conf_file.path, lineno, bak_param);
+		throw_err(ERR_CONFIG, TEXT_ERROR_FILE_CONF_PARAM,
+			conf.conf_file.path, lineno, words);
 	}
-
-	/* Get the next token */
-	token = strtok(NULL, delim);
-	if (!token)
-	{
-		throw_err(ERR_INTERN, "In config file %s line %d missing value after parameter %s\n",
-			conf.conf_file.path, lineno, bak_param);
-		return;
-	}
-
-	// DEBUG
-	/*
-	throw_err(ERR_INFO, "[%s:%d]: %s = %s from\n%s\n",
-		conf.conf_file.path, lineno, bak_param, token, line);
-	*/
 
 	switch (type)
 	{
-		case CONF_LOG_ID:
+		case CONF_LOGFILE_ID:
 		{
-			strcpy(conf.logfile.path, token);
+			/* Try to read log filename */
+			if (next_word(&word) <= 0)
+			{
+				throw_err(ERR_CONFIG, TEXT_ERROR_FILE_CONF_VAL_MISSING,
+					word, words, conf.conf_file.path, lineno);
+			}
+
+			/* Update the log file */
+			strncpy(conf.logfile.path, word, CONF_READ_BUF_SIZE - 1);
+			conf.logfile.path[CONF_READ_BUF_SIZE - 1] = 0x00;
 			break;
 		}
-
-		case CONF_WORKER_IP4_ID:
+		case CONF_WORKER_ID:
 		{
-			worker_create();
-			// TODO: Implement networking
-			env.workers[env.worker_count - 1].ipv4 = 0;
-			env.workers[env.worker_count - 1].ipv6[0] = 0;
-			env.workers[env.worker_count - 1].ipv6[1] = 0;
-			env.workers[env.worker_count - 1].ipv6[2] = 0;
-			env.workers[env.worker_count - 1].port = 0;
-			break;
-		}
+			/* Create a new worker */
+			worker_t *worker = worker_create();
 
-		case CONF_WORKER_IP6_ID:
-		{
-			worker_create();
-			// TODO: Implement networking
-			env.workers[env.worker_count - 1].ipv4 = 0;
-			env.workers[env.worker_count - 1].ipv6[0] = 0;
-			env.workers[env.worker_count - 1].ipv6[1] = 0;
-			env.workers[env.worker_count - 1].ipv6[2] = 0;
-			env.workers[env.worker_count - 1].port = 0;
+			/* Try to read worker name */
+			if (next_word(&word) <= 0)
+			{
+				throw_err(ERR_CONFIG, TEXT_ERROR_FILE_CONF_VAL_MISSING,
+					word, words, conf.conf_file.path, lineno);
+			}
+			
+			strncpy(worker->name, word, CONF_READ_BUF_SIZE);
+
+			/* Try to read worker ip version */
+			if (next_word(&word) <= 0)
+			{
+				throw_err(ERR_CONFIG, TEXT_ERROR_FILE_CONF_VAL_MISSING,
+					word, words, conf.conf_file.path, lineno);
+			}
+
+			switch (word[0])
+			{
+				case '4':
+				{
+					MFLAG_UNSET(MFLAG_IS_IP6, worker);
+					break;
+				}
+				case '6':
+				{
+					MFLAG_SET(MFLAG_IS_IP6, worker);
+					break;
+				}
+				default:
+				{
+					throw_err(ERR_CONFIG, TEXT_ERROR_FILE_CONF_VAL_INVALID,
+						word, words, conf.conf_file.path, lineno);
+				}
+			}
+
+			/* Try to read ip address string */
+			if (next_word(&word) <= 0)
+			{
+				throw_err(ERR_CONFIG, TEXT_ERROR_FILE_CONF_VAL_MISSING,
+					word, words, conf.conf_file.path, lineno);
+			}
+
+			/* Load ip address */
+			strncpy(worker->ip_str, word, CONF_READ_BUF_SIZE - 1);
+			worker->ip_str[CONF_READ_BUF_SIZE - 1] = 0x00;
+
+			/* Try to read port number */
+			if (next_word(&word) <= 0)
+			{
+				throw_err(ERR_CONFIG, TEXT_ERROR_FILE_CONF_VAL_MISSING,
+					word, words, conf.conf_file.path, lineno);
+			}
+
+			/* Load port */
+			worker->port = str_to_ushort(word);
+			if (worker->port == 0)
+			{
+				throw_err(ERR_CONFIG, TEXT_ERROR_FILE_CONF_VAL_INVALID,
+					word, words, conf.conf_file.path, lineno);
+			}
+
+			/* All done configuring, let the worker initialize itself */
+			MFLAG_UNSET(MFLAG_HALT, worker);
+
 			break;
 		}
 
 		default:
 		{
 			/* This should not even occur */
-			throw_err(ERR_INTERN, TEXT_ERROR_FILE_CONF_PARSE,
-				conf.conf_file.path, lineno, line, bak_words);
+			throw_err(ERR_CONFIG, words,
+				conf.conf_file.path, lineno, line, words);
 		}
 	}
 
-	while (token != NULL)
+	/* Check for trailing values */
+	if (next_word(&word) > 0)
 	{
-		token = strtok(NULL, delim);
+		throw_err(ERR_CONFIG, TEXT_ERROR_FILE_CONF_VAL_TRAILING,
+			words, conf.conf_file.path, lineno);
 	}
 }
 
@@ -177,10 +218,10 @@ void parse_config()
 	/* Try to open the config file */
 	if (!conf.conf_file.path)
 	{
-		throw_err(ERR_INTERN, TEXT_ERROR_FILE_CONF_PATH);
+		throw_err(ERR_CONFIG, TEXT_ERROR_FILE_CONF_PATH);
 	}
 
-	throw_err(ERR_INFO, TEXT_FILE_CONF_PARSING, conf.conf_file.path);
+	// throw_err(ERR_INFO, TEXT_FILE_CONF_PARSING, conf.conf_file.path);
 
 	conf.conf_file.fd = fopen(conf.conf_file.path, "r");
 	
@@ -193,7 +234,7 @@ void parse_config()
 		
 		if (!conf.conf_file.fd)
 		{
-			throw_err(ERR_INTERN, TEXT_ERROR_FILE_CONF_OPENDEF, conf.conf_file.path);
+			throw_err(ERR_CONFIG, TEXT_ERROR_FILE_CONF_OPENDEF, conf.conf_file.path);
 		}
 	}	
 
@@ -207,7 +248,7 @@ void parse_config()
 
 	if (conf.conf_file.len < 1)
 	{
-		throw_err(ERR_INTERN, TEXT_ERROR_FILE_CONF_EMPTY, conf.conf_file.path);
+		throw_err(ERR_CONFIG, TEXT_ERROR_FILE_CONF_EMPTY, conf.conf_file.path);
 	}
 
 	/* File is read line-by-line */
@@ -230,7 +271,7 @@ void parse_config()
 				if (i >= CONF_READ_BUF_SIZE - 1)
 				{
 					cur_line[CONF_READ_BUF_SIZE - 1] = 0x00;
-					throw_err(ERR_INTERN, TEXT_ERROR_FILE_CONF_LONGLINE, cur_line);
+					throw_err(ERR_CONFIG, TEXT_ERROR_FILE_CONF_LONGLINE, cur_line);
 				}
 			} else {
 				cur_line[i - 1] = 0x00;		// Null-terminate the string
@@ -238,7 +279,7 @@ void parse_config()
 				/* It wasn't EOF, so there's an error */
 				if (feof(conf.conf_file.fd) == 0)
 				{
-					throw_err(ERR_INTERN, TEXT_ERROR_FILE_CONF_READING,
+					throw_err(ERR_CONFIG, TEXT_ERROR_FILE_CONF_READING,
 							conf.conf_file.path, cur_line);
 				}
 
@@ -335,7 +376,7 @@ int parse_multi_char_arg(char **argv, int remaining_args)
 
 void parse_args(int argc, char **argv)
 {
-	throw_err(ERR_INFO, TEXT_ARG_PARSING);
+	// throw_err(ERR_INFO, TEXT_ARG_PARSING);
 
 	if (!argv)
 	{

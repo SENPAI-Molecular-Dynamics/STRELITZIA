@@ -4,7 +4,7 @@ SOURCEDIR = sources
 HEADERDIR = headers
 
 PARAMS =
-LIBS = -lm
+LIBS = -lm -lpthread
 WARNS = -Wextra -Wimplicit-fallthrough=0
 CFLAGS = -g -O0 -I./$(HEADERDIR) $(WARNS)
 

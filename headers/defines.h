@@ -5,6 +5,8 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <errno.h>
+#include <pthread.h>
+#include <time.h>
 
 #include "codes.h"
 //#include "universe.h"
@@ -14,6 +16,13 @@
 //#define DEFAULT_LOG_FILE "/var/log/strelitzia.log"
 #define DEFAULT_LOG_FILE "./strelitzia.log"
 #define CONF_READ_BUF_SIZE 1024		// Max line length of config file
+
+// TODO: This might belong in the config file too
+// TODO: Make a defaults.h
+/* Timeouts for various events */
+#define WORKER_HALT_TIMEOUT_MILLIS 3000		// 3 Seconds for halting
+#define WORKER_DISCONN_TIMEOUT_MILLIS 3000	// 3 Seconds for disconnecting
+#define WORKER_EXIT_TIMEOUT_MILLIS 1000		// 1 Second for exiting
 
 /* Everything you might need from a file */
 typedef struct
@@ -35,14 +44,21 @@ typedef struct
 {
 	/* Reference */
 	uint32_t id;
+	char *name;
+
 	/* Keep track of the state of a worker */
-	uint8_t flags;
+	uint8_t mflags;		// Set by manager
+	uint8_t wflags;		// Set by worker
 
 	/* Networking */
-	// TODO: This is just a placeholder
-	uint32_t ipv4;
-	uint64_t ipv6[3];
-	uint16_t port;
+	char *ip_str;		// String for of the IP address
+	uint16_t port;		// The port to connect to
+	int socketfd;		// File descriptor of the socket
+	// TODO: This and all the other networking
+	// struct sockaddr_in serv_addr;	// Internet socket struct
+
+	/* Associated thread */
+	pthread_t tid;
 
 	/* Timing */
 	// TODO: This is just a placeholder

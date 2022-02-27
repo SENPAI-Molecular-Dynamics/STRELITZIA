@@ -16,41 +16,52 @@
 #define COLOR_YELLOW "\x1B[33m"
 
 /* Error prefixes */
-#define TEXT_BANG     "[" COLOR_RED "!" COLOR_RESET "] "
-#define TEXT_INFO     TEXT_BANG COLOR_YELLOW "INFORMATION   " COLOR_RESET ": "
-#define TEXT_WARNING  TEXT_BANG COLOR_YELLOW "WARNING       " COLOR_RESET ": "
-#define TEXT_HEAVWARN TEXT_BANG COLOR_RED    "HEAVY WARNING " COLOR_RESET ": "
-#define TEXT_ERROR    TEXT_BANG COLOR_RED    "ERROR         " COLOR_RESET ": "
-#define TEXT_INTERROR TEXT_BANG COLOR_RED    "INTERNAL ERROR" COLOR_RESET ": "
-#define TEXT_PANIC    TEXT_BANG COLOR_RED    "!!! PANIC !!! " COLOR_RESET ": Unknown error code !\n"
-#define TEXT_SUCCESS  TEXT_BANG COLOR_GREEN  "OK            " COLOR_RESET ": "
+#define TEXT_BANG	"[" COLOR_RED "!" COLOR_RESET "] "
+#define TEXT_INFO	TEXT_BANG COLOR_YELLOW	"INFORMATION   " COLOR_RESET ": "
+#define TEXT_WARNING	TEXT_BANG COLOR_YELLOW	"WARNING       " COLOR_RESET ": "
+#define TEXT_HEAVWARN	TEXT_BANG COLOR_RED	"HEAVY WARNING " COLOR_RESET ": "
+#define TEXT_ERROR	TEXT_BANG COLOR_RED	"ERROR         " COLOR_RESET ": "
+#define TEXT_INTERROR	TEXT_BANG COLOR_RED	"INTERNAL ERROR" COLOR_RESET ": "
+#define TEXT_CONFERR	TEXT_BANG COLOR_RED	"CONFIG ERROR  " COLOR_RESET ": "
+#define TEXT_PANIC	TEXT_BANG COLOR_RED	"!!! PANIC !!! " COLOR_RESET ": Unknown error code !\n"
+#define TEXT_SUCCESS	TEXT_BANG COLOR_GREEN	"OK            " COLOR_RESET ": "
 
 /* Error messages */
-#define TEXT_ERROR_EXITING            "Exiting\n"
-#define TEXT_ERROR_EXITING_DONE       "Exiting DONE\n"
+#define TEXT_ERROR_EXITING		"Exiting\n"
+#define TEXT_ERROR_EXITING_DONE		"Exiting DONE\n"
 
-#define TEXT_ERROR_MALLOC_OUTOFMEM    "Ran out of memory\n"
-#define TEXT_ERROR_MALLOC_FAILED      "Unknown error at memory allocation [%s:%d]\n"
+#define TEXT_ERROR_MALLOC_OUTOFMEM	"Ran out of memory\n"
+#define TEXT_ERROR_MALLOC_FAILED	"Unknown error at memory allocation [%s:%d]\n"
 
-#define TEXT_ERROR_FILE_LOG_OPEN      "Failed to open log file %s\n"
+#define TEXT_ERROR_FILE_LOG_OPEN	"Failed to open log file %s\n"
 
-#define TEXT_ERROR_FILE_CONF_PARSE    "In config file %s line %d error parsing line \n%s\n%s\n"
-#define TEXT_ERROR_FILE_CONF_PATH     "Config file path was NULL\n"
-#define TEXT_ERROR_FILE_CONF_OPEN     "Failed to open config file %s. Trying default at %s\n"
-#define TEXT_ERROR_FILE_CONF_OPENDEF  "Failed to open default config file. Check if %s exists\n"
-#define TEXT_ERROR_FILE_CONF_EMPTY    "Config file %s is empty"
-#define TEXT_ERROR_FILE_CONF_LONGLINE "Line in config file is too long:\n%s\n"
-#define TEXT_ERROR_FILE_CONF_READING  "Unexpected error reading from %s. Last line:\n %s\n"
+#define TEXT_ERROR_FILE_CONF_PARSE	"In config file %s line %d error parsing line \n%s\n%s\n"
+#define TEXT_ERROR_FILE_CONF_PATH	"Config file path was NULL\n"
+#define TEXT_ERROR_FILE_CONF_OPEN	"Failed to open config file %s. Trying default at %s\n"
+#define TEXT_ERROR_FILE_CONF_OPENDEF	"Failed to open default config file. Check if %s exists\n"
+#define TEXT_ERROR_FILE_CONF_EMPTY	"Config file %s is empty"
+#define TEXT_ERROR_FILE_CONF_LONGLINE	"Line in config file is too long:\n%s\n"
+#define TEXT_ERROR_FILE_CONF_READING	"Unexpected error reading from %s. Last line:\n %s\n"
+#define TEXT_ERROR_FILE_CONF_PARAM	"In config file %s line %d parameter not recognised: %s\n"
+#define TEXT_ERROR_FILE_CONF_VAL_TRAILING	"Trailing value found for parameter %s in %s:%d\n"
+#define TEXT_ERROR_FILE_CONF_VAL_INVALID	"Invalid value %s for parameter %s in %s:%d\n"
+#define TEXT_ERROR_FILE_CONF_VAL_MISSING	"Missing value after %s for parameter %s in %s:%d\n"
 
-#define TEXT_ERROR_ARG_EXPECTED_PARAM "Expected parameter for arg %c\n"
-#define TEXT_ERROR_ARG_UNKNOWN        "Unknown argument %c\n"
-#define TEXT_ERROR_ARG_UNKNOWN2       "Argument not recognised: %s. Also check %s\n"
-#define TEXT_ERROR_ARG_NODOUBLEDASH   "Argument %s does not start with '--'\n"
-#define TEXT_ERROR_ARG_ARGV_NULL      "argv was NULL\n"
-#define TEXT_ERROR_ARG_SINGLECHAR     "Single char arg caught: %s\n"
-#define TEXT_ERROR_ARG_MULTICHAR      "Multi char arg caught: %s\n"
+#define TEXT_ERROR_ARG_EXPECTED_PARAM	"Expected parameter for arg %c\n"
+#define TEXT_ERROR_ARG_UNKNOWN		"Unknown argument %c\n"
+#define TEXT_ERROR_ARG_UNKNOWN2		"Argument not recognised: %s. Also check %s\n"
+#define TEXT_ERROR_ARG_NODOUBLEDASH	"Argument %s does not start with '--'\n"
+#define TEXT_ERROR_ARG_ARGV_NULL	"argv was NULL\n"
+#define TEXT_ERROR_ARG_SINGLECHAR	"Single char arg caught: %s\n"
+#define TEXT_ERROR_ARG_MULTICHAR	"Multi char arg caught: %s\n"
 
+#define TEXT_ERROR_PTHREAD_SYS_LIMIT	"Insufficient resources or system limit for creating thread with id %d at ip %s\n"
+#define TEXT_ERROR_PTHREAD_INVAL	"Invalid initializing values for creating thread with id %d at ip %s\n"
+#define TEXT_ERROR_PTHREAD_PERM		"Insufficient permissions for creating thread with id %d at ip %s\n"
 
+#define TEXT_ERROR_WORKER_TIMEOUT_HALT	"%d workers have timed out on a HALT request\n"
+#define TEXT_ERROR_WORKER_TIMEOUT_DISCONN	"%d workers have timed out on disconnecting from their nodes request\n"
+#define TEXT_ERROR_WORKER_TIMEOUT_EXIT	"%d workers have timed out on exiting\n"
 
 /* The splash screen */
 #define TEXT_SPLASH "   _______________  ________    _______________   _______\n" \
@@ -72,10 +83,10 @@
 #define TEXT_INITIALIZING_DONE "Initializing DONE\n"
 
 #define TEXT_INFO_FROM        "From [%s:%d]:\n"
-#define TEXT_INFO_FILE_CONFIG "Config file...%s\n"
-#define TEXT_INFO_FILE_LOG    "Log file......%s\n"
-#define TEXT_INFO_WORKER_NB   "Workers.......%s\n"
-#define TEXT_INFO_WORKER      "=>[%03d]: flags=%x, ipv4=%d, ipv6=%ld%ld%ld port=%d\n"
+#define TEXT_INFO_FILE_CONFIG "Config file:  %s\n"
+#define TEXT_INFO_FILE_LOG    "Log file:     %s\n"
+#define TEXT_INFO_WORKER_NB   "Workers:      %d\n"
+#define TEXT_INFO_WORKER      "=>[%03d|%-8.8s]: [m:w]=%s:%s, port=%5d, ip=%-39s\n"
 
 
 
