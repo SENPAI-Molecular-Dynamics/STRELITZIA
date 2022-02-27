@@ -51,7 +51,12 @@
 #define MFLAG_IS_IP6	0x80	// 0 => IPv4, 1 => IPv6
 
 /* Worker error numbers */
+#define WERRNO_UNSPEC	       -1	// Unspecified error
+#define WERRNO_NOTHING		0	// No errors
 #define WERRNO_CONN_FAIL	1	// Failed to connect to worker
+#define WERRNO_SOCK_OPEN_FAIL	2	// Failed to open socket
+#define WERRNO_EXIT_EXIST_CONN	3	// Exiting while still connected
+#define WERRNO_ADDR_INVALID	4	// Invalid IP address
 
 /* Parameters */
 #define ARG_LONG_CONF_FILE "--conf"

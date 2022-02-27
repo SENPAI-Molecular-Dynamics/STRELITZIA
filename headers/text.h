@@ -88,7 +88,7 @@
 #define TEXT_INFO_FILE_CONFIG "Config file:  %s\n"
 #define TEXT_INFO_FILE_LOG    "Log file:     %s\n"
 #define TEXT_INFO_WORKER_NB   "Workers:      %d\n"
-#define TEXT_INFO_WORKER      "=>[%03d|%-8.8s]: [m:w]=%s:%s, port=%5d, ip=%-39s\n"
+#define TEXT_INFO_WORKER      "=>[%03d|%-8.8s]: [m:w]=%s:%s, err=%02d, port=%5d, ip=%-39s\n"
 
 
 

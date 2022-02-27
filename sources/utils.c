@@ -141,6 +141,7 @@ worker_t *worker_create()
 	self->wflags |= WFLAG_ALIVE;
 
 	/* Set information */
+	self->errnum = WERRNO_NOTHING;
 	self->id = env.worker_count;
 	self->name = (char *) malloc(CONF_READ_BUF_SIZE);
 	self->ip_str = (char *) malloc(CONF_READ_BUF_SIZE);
@@ -330,7 +331,7 @@ void print_sys_stats(char *file, int line)
 		sprintb(&wflags, &worker->wflags, 8);
 
 		throw_err(ERR_INFO, TEXT_INFO_WORKER,
-			worker->id, worker->name, mflags, wflags, worker->port, worker->ip_str);
+			worker->id, worker->name, mflags, wflags, worker->errnum, worker->port, worker->ip_str);
 	}
 
 	free(mflags);

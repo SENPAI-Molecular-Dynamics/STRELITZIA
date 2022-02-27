@@ -53,9 +53,7 @@ typedef struct
 	/* Networking */
 	char *ip_str;		// String for of the IP address
 	uint16_t port;		// The port to connect to
-	int socketfd;		// File descriptor of the socket
-	// TODO: This and all the other networking
-	// struct sockaddr_in serv_addr;	// Internet socket struct
+	int sockfd;		// File descriptor of the socket to the worker node
 
 	/* Associated thread */
 	pthread_t tid;
@@ -63,7 +61,6 @@ typedef struct
 	/* Timing */
 	// TODO: This is just a placeholder
 	time_t start, finish;
-
 	/* The range of atoms to work on */
 	uint64_t atom_range[2];
 	/* The work returned */
@@ -71,7 +68,6 @@ typedef struct
 
 	/* If the worker encounters an error */
 	uint32_t errnum;
-	char *errdesc;
 } worker_t;
 
 /* Errors may contain this information */
