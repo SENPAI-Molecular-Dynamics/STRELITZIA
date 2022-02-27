@@ -7,12 +7,15 @@
 #include "utils.h"
 #include "network.h"
 
+/* Connecting / disconnecting from the worker node */
 void worker_node_connect(worker_t *self);
 void worker_node_disconnect(worker_t *self);
 
+/* Functions to call when halting / exiting */
 void worker_halt_routine(worker_t *self);
 void worker_exit_routine(worker_t *self);
 
+/* Check if the flags have been set and behave accordingly */
 void flag_handle_halt(worker_t *self);
 void flag_handle_conn(worker_t *self);
 void flag_handle_exit(worker_t *self);
@@ -37,6 +40,7 @@ void *worker_main_loop(void *vself)
 		// TODO: The program goes here
 		if (WFLAG_ISSET(WFLAG_CONNECTED, self))
 		{
+			SENTP_WRITE_BIN(self->sockfd, SENTP_BIN_DESC_CONFIG, (void *) self->name, strlen(self->name));
 		}
 	}
 
@@ -72,9 +76,8 @@ void worker_node_connect(worker_t *self)
 		}
 	}
 
-	// TODO: Tell worker node to initialize
-
-	write(self->sockfd, (void *) self->name, strlen(self->name) + 1);
+	/* Tell the worker node to initialize */
+	SENTP_WRITE_CTRL(self->sockfd, SENTP_CONTROL_INIT);
 
 	/* Otherwise a connection was established, set the connected flag */
 	WFLAG_SET(WFLAG_CONNECTED, self);
@@ -89,7 +92,8 @@ void worker_node_disconnect(worker_t *self)
 		return;
 	}
 
-	// TODO: Tell worker node to exit
+	/* Tell the worker node to exit */
+	SENTP_WRITE_CTRL(self->sockfd, SENTP_CONTROL_EXIT);
 
 	close(self->sockfd);
 	WFLAG_UNSET(WFLAG_CONNECTED, self);
@@ -98,7 +102,8 @@ void worker_node_disconnect(worker_t *self)
 /* Called when halting */
 void worker_halt_routine(worker_t *self)
 {
-	// TODO: Request worker node to halt
+	/* Request the worker node to halt */
+	SENTP_WRITE_CTRL(self->sockfd, SENTP_CONTROL_HALT);
 
 	WFLAG_SET(WFLAG_HALTING, self);
 
@@ -113,6 +118,9 @@ void worker_halt_routine(worker_t *self)
 			return;
 		}
 	}
+
+	/* Request the worker node to continue */
+	SENTP_WRITE_CTRL(self->sockfd, SENTP_CONTROL_CONT);
 
 	WFLAG_UNSET(WFLAG_HALTING, self);
 }

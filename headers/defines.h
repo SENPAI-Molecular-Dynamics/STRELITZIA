@@ -11,7 +11,7 @@
 #include "codes.h"
 //#include "universe.h"
 
-//#define DEFAULT_CONFIG_FILE "/etc/senpai/strelitzia.conf"
+//#define DEFAULT_CONFIG_FILE "/etc/senpaimd/strelitzia.conf"
 #define DEFAULT_CONFIG_FILE "./strelitzia.conf"
 //#define DEFAULT_LOG_FILE "/var/log/strelitzia.log"
 #define DEFAULT_LOG_FILE "./strelitzia.log"
